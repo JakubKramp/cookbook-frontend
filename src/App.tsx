@@ -23,9 +23,7 @@ function App() {
         password: '',
     })
 
-    const handleProfileSubmit = () => {
-        toast.success('Profile submitted!')
-    }
+
 
     const handleAuthSubmit = async () => {
         const controller = new AbortController()
@@ -69,11 +67,48 @@ function App() {
             if (response.ok) {
                 const data = await response.json()
                 console.log(data)
-                localStorage.setItem('token', data.access_token)
+                localStorage.setItem('username', authData.username)
                 toast.success('Logged in!')
             } else {
                 const error = await response.json()
                 toast.error(error.detail || 'Invalid credentials')
+            }
+        } catch (e) {
+            clearTimeout(timeout)
+            if (e instanceof DOMException && e.name === 'AbortError') {
+                toast.error('Request timed out')
+            } else {
+                toast.error('Could not connect to server')
+            }
+        }
+    }
+
+    const handleProfileSubmit = async () => {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 3000)
+        try {
+            const response = await fetch('http://localhost:8000/user/profile', {
+                method: 'POST',
+                headers: {   'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,},
+                body: JSON.stringify({
+                    sex: profileData.sex || null,
+                    activity_factor: profileData.activity_factor || null,
+                    age: profileData.age ? parseInt(profileData.age) : null,
+                    height: profileData.height ? parseInt(profileData.height) : null,
+                    weight: profileData.weight ? parseInt(profileData.weight) : null,
+                    smoking: profileData.smoking,
+                }),
+                signal: controller.signal,
+            })
+            clearTimeout(timeout)
+            if (response.ok) {
+                const data = await response.json()
+                console.log(data)
+                toast.success('Succesfully created profile')
+            } else {
+                const error = await response.json()
+                toast.error(error.detail || `Error ${error.detail}`)
             }
         } catch (e) {
             clearTimeout(timeout)
@@ -145,12 +180,18 @@ function App() {
                             <option value="Female">Female</option>
                         </select>
 
-                        <input
-                            placeholder="Activity factor"
+                        <select
                             value={profileData.activity_factor}
                             onChange={e => setProfileData({ ...profileData, activity_factor: e.target.value })}
                             style={inputStyle}
-                        />
+                        >
+                            <option value="Little/no exercise">Little/no exercise</option>
+                            <option value="Exercise 1-2 times/week">Exercise 1-2 times/week</option>
+                            <option value="Exercise 2-3 times/week">Exercise 2-3 times/week</option>
+                            <option value="Exercise 3-5 times/week">Exercise 3-5 times/week</option>
+                            <option value="Exercise 6-7 times/week">Exercise 6-7 times/week</option>
+                            <option value="Professional athlete">Professional athlete</option>
+                        </select>
                         <input
                             type="number"
                             placeholder="Age"
@@ -263,7 +304,7 @@ function App() {
 
             {/* Main Content */}
             <div style={{ textAlign: 'center', marginTop: '80px' }}>
-                <h1>Cookbook</h1>
+                <h1>Hello {localStorage.getItem('token') ? authData.username : 'Guest'}</h1>
                 <div className="card">
                     <button onClick={() => {
                         setCount((count) => count + 1)
