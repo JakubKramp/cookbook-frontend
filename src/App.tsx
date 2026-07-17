@@ -2,8 +2,9 @@ import { useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import './App.css'
 
+const API_URL = import.meta.env.VITE_API_URL
+
 function App() {
-    const [count, setCount] = useState(0)
     const [isProfileOpen, setIsProfileOpen] = useState(true)
     const [isAuthOpen, setIsAuthOpen] = useState(true)
     const [authMode, setAuthMode] = useState<'register' | 'login'>('register')
@@ -29,7 +30,7 @@ function App() {
         const controller = new AbortController()
         const timeout = setTimeout(() => controller.abort(), 3000)
         try {
-            const response = await fetch('http://localhost:8000/user/', {
+            const response = await fetch(`${API_URL}/user/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(authData),
@@ -57,7 +58,7 @@ function App() {
         const controller = new AbortController()
         const timeout = setTimeout(() => controller.abort(), 3000)
         try {
-            const response = await fetch('http://localhost:8000/user/login', {
+            const response = await fetch(`${API_URL}/user/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({ username: authData.username, password: authData.password }),
@@ -87,7 +88,7 @@ function App() {
         const controller = new AbortController()
         const timeout = setTimeout(() => controller.abort(), 3000)
         try {
-            const response = await fetch('http://localhost:8000/user/profile', {
+            const response = await fetch(`${API_URL}/user/profile`, {
                 method: 'POST',
                 headers: {   'Content-Type': 'application/json',
                             'Authorization': `Bearer ${localStorage.getItem('token')}`,},
@@ -305,14 +306,6 @@ function App() {
             {/* Main Content */}
             <div style={{ textAlign: 'center', marginTop: '80px' }}>
                 <h1>Hello {localStorage.getItem('token') ? authData.username : 'Guest'}</h1>
-                <div className="card">
-                    <button onClick={() => {
-                        setCount((count) => count + 1)
-                        toast.success(`Count is now ${count + 1}`)
-                    }}>
-                        count is {count}
-                    </button>
-                </div>
             </div>
         </>
     )
